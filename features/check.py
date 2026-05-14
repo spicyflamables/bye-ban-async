@@ -55,6 +55,51 @@ def check():
 def clean():
     browsers = check()
 
+    # no browsers found
     if not browsers:
         print(f"{red}[ - ]{reset} couldnt find any browser cookie files")
         return
+
+    # loop browsers
+    for name, db_path, browser_exe in browsers:
+        try:
+            # close browser
+            print(f"{red}[ - ]{reset} closing {name}")
+
+            os.system(
+                f"taskkill /F /IM {browser_exe} >nul 2>&1"
+            )
+
+            time.sleep(1)
+
+            # open cookie db
+            connection = sqlite3.connect(db_path)
+            cursor = connection.cursor()
+
+            # remove roblox cookies
+            cursor.execute(
+                "DELETE FROM cookies WHERE host_key LIKE '%roblox.com%'"
+            )
+
+            removed = cursor.rowcount
+
+            connection.commit()
+            connection.close()
+
+            # print removed count
+            if removed > 0:
+                print(
+                    f"{green}[ + ]{reset} removed "
+                    f"{removed} roblox cookies from {name}"
+                )
+
+            else:
+                print(
+                    f"{red}[ - ]{reset} no roblox cookies found in {name}"
+                )
+
+        except Exception as e:
+            print(f"{red}[ - ]{reset} failed on {name}")
+            print(e)
+
+clean()
